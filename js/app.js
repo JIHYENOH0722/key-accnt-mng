@@ -2,6 +2,21 @@
    KAM System — Customer Profile-Centric Application Logic
    ================================================================ */
 
+// ── Theme Toggle ──
+(function(){
+  const saved = localStorage.getItem('kam_theme');
+  if(saved) document.documentElement.setAttribute('data-theme', saved);
+})();
+document.addEventListener('DOMContentLoaded', function(){
+  const btn = document.getElementById('themeToggle');
+  if(btn) btn.addEventListener('click', function(){
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const next = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('kam_theme', next);
+  });
+});
+
 // ── Data ──
 let accounts = JSON.parse(localStorage.getItem('kam_accounts') || '[]');
 let activities = JSON.parse(localStorage.getItem('kam_activities') || '[]');
