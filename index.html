@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KAM - 기업고객 영업관리 시스템</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ===== Sidebar ===== -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">K</div>
+    <div class="brand-text">
+      <h2>KAM System</h2>
+      <p>Sales Management</p>
+    </div>
+  </div>
+  <nav class="sidebar-nav" id="sideNav">
+    <div class="nav-section">
+      <div class="nav-section-title">메인</div>
+      <div class="nav-item active" data-page="dashboard"><i class="fas fa-chart-pie"></i>대시보드</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">고객 관리</div>
+      <div class="nav-item" data-page="accounts"><i class="fas fa-building"></i>거래처 관리<span class="nav-badge" id="navAccCnt">0</span></div>
+      <div class="nav-item" data-page="sales"><i class="fas fa-won-sign"></i>매출 관리</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">영업 활동</div>
+      <div class="nav-item" data-page="activities"><i class="fas fa-clipboard-list"></i>활동 내역</div>
+      <div class="nav-item" data-page="pipeline"><i class="fas fa-filter"></i>파이프라인</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">데이터</div>
+      <div class="nav-item" data-page="import"><i class="fas fa-file-import"></i>데이터 가져오기</div>
+      <div class="nav-item" data-page="export"><i class="fas fa-file-export"></i>데이터 내보내기</div>
+    </div>
+  </nav>
+  <div class="sidebar-footer">&copy; 2026 KAM System v1.0</div>
+</aside>
+
+<!-- ===== Main Content ===== -->
+<div class="main">
+  <header class="top-header">
+    <span class="page-title" id="pageTitle">대시보드</span>
+    <div class="header-actions">
+      <div class="global-search">
+        <i class="fas fa-search"></i>
+        <input type="text" id="globalSearch" placeholder="거래처, 담당자 검색...">
+      </div>
+      <div class="header-icon" title="알림"><i class="fas fa-bell"></i></div>
+      <div class="header-icon" title="설정"><i class="fas fa-cog"></i></div>
+    </div>
+  </header>
+
+  <div class="page-content">
+
+    <!-- ====== 대시보드 ====== -->
+    <section class="page active" id="pg-dashboard">
+      <div class="pg-header">
+        <div><h2>대시보드</h2><div class="subtitle" id="dashDate"></div></div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card red">
+          <div class="kpi-top"><div class="kpi-icon"><i class="fas fa-building"></i></div></div>
+          <div class="kpi-value" id="dkTotal">0</div>
+          <div class="kpi-label">전체 거래처</div>
+        </div>
+        <div class="kpi-card blue">
+          <div class="kpi-top"><div class="kpi-icon"><i class="fas fa-spinner"></i></div></div>
+          <div class="kpi-value" id="dkOpen">0</div>
+          <div class="kpi-label">진행중 영업</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-top"><div class="kpi-icon"><i class="fas fa-trophy"></i></div></div>
+          <div class="kpi-value" id="dkWon">0</div>
+          <div class="kpi-label">수주 완료</div>
+        </div>
+        <div class="kpi-card orange">
+          <div class="kpi-top"><div class="kpi-icon"><i class="fas fa-ban"></i></div></div>
+          <div class="kpi-value" id="dkLost">0</div>
+          <div class="kpi-label">실주</div>
+        </div>
+        <div class="kpi-card purple">
+          <div class="kpi-top"><div class="kpi-icon"><i class="fas fa-won-sign"></i></div></div>
+          <div class="kpi-value" id="dkRevenue">₩0</div>
+          <div class="kpi-label">총 예상매출</div>
+        </div>
+      </div>
+
+      <div class="chart-grid">
+        <div class="card"><div class="card-header"><h3>영업 파이프라인</h3></div><div class="card-body"><canvas id="chPipe"></canvas></div></div>
+        <div class="card"><div class="card-header"><h3>월별 매출 추이</h3></div><div class="card-body"><canvas id="chRevenue"></canvas></div></div>
+      </div>
+      <div class="chart-grid">
+        <div class="card"><div class="card-header"><h3>산업군별 분포</h3></div><div class="card-body"><canvas id="chIndustry"></canvas></div></div>
+        <div class="card"><div class="card-header"><h3>담당자별 실적</h3></div><div class="card-body"><canvas id="chOwner"></canvas></div></div>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <div class="card-header"><h3><i class="fas fa-stream" style="margin-right:6px;color:var(--lg-gray-300)"></i>최근 활동</h3></div>
+        <div class="card-body" id="dashStream">
+          <div class="empty-state"><i class="fas fa-inbox"></i><p>등록된 영업활동이 없습니다.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== 거래처 관리 ====== -->
+    <section class="page" id="pg-accounts">
+      <div class="pg-header">
+        <div><h2>거래처 관리</h2></div>
+        <div class="btn-group">
+          <button class="btn btn-outline" id="btnBulkUpload"><i class="fas fa-file-excel"></i>일괄 등록</button>
+          <button class="btn btn-primary" id="btnNewAcc"><i class="fas fa-plus"></i>새 거래처</button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-box"><i class="fas fa-search"></i><input id="accSearch" placeholder="거래처명, 담당자 검색..."></div>
+        <select class="filter-select" id="fltStage"><option value="">전체 단계</option><option>초기접촉</option><option>니즈파악</option><option>제안</option><option>협상</option><option>수주</option><option>실주</option></select>
+        <select class="filter-select" id="fltIndustry"><option value="">전체 산업군</option></select>
+        <select class="filter-select" id="fltOwner"><option value="">전체 담당자</option></select>
+        <div class="view-toggle">
+          <button class="view-btn active" data-view="table"><i class="fas fa-th-list"></i></button>
+          <button class="view-btn" data-view="kanban"><i class="fas fa-columns"></i></button>
+        </div>
+        <span class="record-count" id="accCount">0건</span>
+      </div>
+
+      <!-- Table View -->
+      <div class="card" id="accTableView">
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead><tr>
+              <th>거래처명</th><th>담당자</th><th>연락처</th><th>산업군</th>
+              <th>영업단계</th><th>수주확률</th><th>예상매출</th><th>영업담당</th><th>최근활동</th><th>작업</th>
+            </tr></thead>
+            <tbody id="accTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Kanban View -->
+      <div class="kanban" id="accKanban" style="display:none"></div>
+    </section>
+
+    <!-- ====== 매출 관리 ====== -->
+    <section class="page" id="pg-sales">
+      <div class="pg-header">
+        <div><h2>매출 관리</h2></div>
+        <div class="btn-group">
+          <button class="btn btn-outline" id="btnExportSales"><i class="fas fa-file-excel"></i>Excel 내보내기</button>
+        </div>
+      </div>
+
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="kpi-card green"><div class="kpi-top"><div class="kpi-icon"><i class="fas fa-chart-line"></i></div></div><div class="kpi-value" id="skTotal">₩0</div><div class="kpi-label">총 예상매출</div></div>
+        <div class="kpi-card blue"><div class="kpi-top"><div class="kpi-icon"><i class="fas fa-hand-holding-usd"></i></div></div><div class="kpi-value" id="skWon">₩0</div><div class="kpi-label">수주 매출</div></div>
+        <div class="kpi-card orange"><div class="kpi-top"><div class="kpi-icon"><i class="fas fa-hourglass-half"></i></div></div><div class="kpi-value" id="skPending">₩0</div><div class="kpi-label">진행중 매출</div></div>
+        <div class="kpi-card red"><div class="kpi-top"><div class="kpi-icon"><i class="fas fa-percentage"></i></div></div><div class="kpi-value" id="skRate">0%</div><div class="kpi-label">수주율</div></div>
+      </div>
+
+      <div class="chart-grid">
+        <div class="card"><div class="card-header"><h3>단계별 매출 현황</h3></div><div class="card-body"><canvas id="chSalesStage"></canvas></div></div>
+        <div class="card"><div class="card-header"><h3>담당자별 매출</h3></div><div class="card-body"><canvas id="chSalesOwner"></canvas></div></div>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <div class="card-header"><h3>거래처별 매출 상세</h3></div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <table class="tbl">
+              <thead><tr><th>거래처명</th><th>산업군</th><th>영업단계</th><th>수주확률</th><th>예상매출</th><th>가중매출</th><th>영업담당</th></tr></thead>
+              <tbody id="salesTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== 활동 내역 ====== -->
+    <section class="page" id="pg-activities">
+      <div class="pg-header">
+        <div><h2>활동 내역</h2></div>
+        <button class="btn btn-primary" id="btnNewAct"><i class="fas fa-plus"></i>활동 기록</button>
+      </div>
+      <div class="toolbar">
+        <div class="search-box"><i class="fas fa-search"></i><input id="actSearch" placeholder="거래처, 내용 검색..."></div>
+        <select class="filter-select" id="fltActType"><option value="">전체 유형</option><option>미팅</option><option>전화</option><option>이메일</option><option>제안서</option><option>계약</option><option>기타</option></select>
+        <span class="record-count" id="actCount">0건</span>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead><tr><th>일자</th><th>거래처</th><th>유형</th><th>내용</th><th>결과</th><th>후속조치</th><th>담당자</th><th>작업</th></tr></thead>
+            <tbody id="actTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== 파이프라인 ====== -->
+    <section class="page" id="pg-pipeline">
+      <div class="pg-header"><div><h2>영업 파이프라인</h2><div class="subtitle">드래그 앤 드롭으로 단계를 변경할 수 있습니다 (칸반 뷰)</div></div></div>
+      <div class="kanban" id="pipeKanban"></div>
+    </section>
+
+    <!-- ====== 데이터 가져오기 ====== -->
+    <section class="page" id="pg-import">
+      <div class="pg-header"><div><h2>데이터 가져오기</h2><div class="subtitle">엑셀 파일로 거래처를 일괄 등록할 수 있습니다.</div></div></div>
+
+      <div class="card">
+        <div class="card-body">
+          <div class="steps-bar">
+            <div class="step-item active" id="st1"><span class="step-num">1</span>양식 확인</div>
+            <div class="step-line"></div>
+            <div class="step-item" id="st2"><span class="step-num">2</span>파일 업로드</div>
+            <div class="step-line"></div>
+            <div class="step-item" id="st3"><span class="step-num">3</span>미리보기 &amp; 확인</div>
+          </div>
+
+          <!-- Step 1 -->
+          <div class="import-step" id="is1">
+            <div class="format-box">
+              <h4><i class="fas fa-table"></i> 엑셀 양식 안내</h4>
+              <p style="font-size:.85rem;color:var(--lg-gray-500);margin-bottom:12px">아래 컬럼 순서에 맞춰 엑셀 파일을 작성하세요. <b>기업명</b>은 필수입니다.</p>
+              <div class="table-wrap">
+                <table class="tbl">
+                  <thead><tr><th>기업명*</th><th>담당자명</th><th>연락처</th><th>이메일</th><th>산업군</th><th>예상매출</th><th>영업담당</th><th>비고</th></tr></thead>
+                  <tbody><tr style="color:var(--lg-gray-500)"><td>(주)LG전자</td><td>김철수</td><td>010-1234-5678</td><td>kim@lg.com</td><td>전자/IT</td><td>100000000</td><td>박영업</td><td>VIP 고객</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="btn-group" style="margin-top:20px">
+              <button class="btn btn-outline" id="dlTemplate"><i class="fas fa-download"></i>빈 양식 다운로드</button>
+              <button class="btn btn-primary" onclick="goImportStep(2)">다음 <i class="fas fa-arrow-right"></i></button>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="import-step" id="is2" style="display:none">
+            <div class="drop-zone" id="dropZone">
+              <i class="fas fa-cloud-upload-alt icon-upload"></i>
+              <p>엑셀 파일을 여기에 드래그하거나 클릭하세요</p>
+              <small>.xlsx, .xls 파일 지원</small>
+              <input type="file" id="fileInput" accept=".xlsx,.xls" hidden>
+            </div>
+            <div class="btn-group" style="margin-top:16px">
+              <button class="btn btn-outline" onclick="goImportStep(1)"><i class="fas fa-arrow-left"></i>이전</button>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="import-step" id="is3" style="display:none">
+            <div style="margin-bottom:12px;display:flex;align-items:center;gap:10px">
+              <span class="record-count" id="pvCount">0건 감지</span>
+            </div>
+            <div class="table-wrap" style="max-height:400px;overflow-y:auto">
+              <table class="tbl" id="pvTable"><thead><tr></tr></thead><tbody></tbody></table>
+            </div>
+            <div class="btn-group" style="margin-top:20px">
+              <button class="btn btn-outline" onclick="goImportStep(2)"><i class="fas fa-arrow-left"></i>이전</button>
+              <button class="btn btn-primary" id="btnConfirmImport"><i class="fas fa-check"></i>가져오기 실행</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== 데이터 내보내기 ====== -->
+    <section class="page" id="pg-export">
+      <div class="pg-header"><div><h2>데이터 내보내기</h2><div class="subtitle">현재 데이터를 엑셀 파일로 내보낼 수 있습니다.</div></div></div>
+      <div class="card">
+        <div class="card-body" style="display:flex;flex-direction:column;gap:16px;align-items:flex-start">
+          <button class="btn btn-outline" id="expAccounts"><i class="fas fa-building"></i>거래처 목록 내보내기 (.xlsx)</button>
+          <button class="btn btn-outline" id="expActivities"><i class="fas fa-clipboard-list"></i>활동 내역 내보내기 (.xlsx)</button>
+          <button class="btn btn-outline" id="expSales"><i class="fas fa-won-sign"></i>매출 리포트 내보내기 (.xlsx)</button>
+          <button class="btn btn-outline" id="expAll"><i class="fas fa-file-archive"></i>전체 데이터 내보내기 (.xlsx)</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- ===== 거래처 모달 ===== -->
+<div class="modal-overlay" id="accModal">
+  <div class="modal">
+    <div class="modal-head"><h3 id="accModalTitle">새 거래처</h3><button class="modal-x" onclick="closeModal('accModal')">&times;</button></div>
+    <div class="modal-body">
+      <form id="accForm">
+        <input type="hidden" id="accId">
+        <div class="form-grid">
+          <div class="form-field"><label>거래처명 <abbr>*</abbr></label><input id="af1" required></div>
+          <div class="form-field"><label>담당자명</label><input id="af2"></div>
+          <div class="form-field"><label>연락처</label><input id="af3"></div>
+          <div class="form-field"><label>이메일</label><input id="af4" type="email"></div>
+          <div class="form-field"><label>산업군</label><input id="af5"></div>
+          <div class="form-field"><label>영업단계</label><select id="af6"><option>초기접촉</option><option>니즈파악</option><option>제안</option><option>협상</option><option>수주</option><option>실주</option></select></div>
+          <div class="form-field"><label>수주확률 (%)</label><input id="af7" type="number" min="0" max="100" value="10"></div>
+          <div class="form-field"><label>예상매출 (원)</label><input id="af8" type="number" value="0"></div>
+          <div class="form-field"><label>영업담당</label><input id="af9"></div>
+          <div class="form-field"><label>등급</label><select id="af11"><option>A</option><option>B</option><option>C</option><option>D</option></select></div>
+          <div class="form-field full"><label>비고</label><textarea id="af10" rows="2"></textarea></div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('accModal')">취소</button>
+      <button class="btn btn-primary" id="btnSaveAcc">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 활동 모달 ===== -->
+<div class="modal-overlay" id="actModal">
+  <div class="modal">
+    <div class="modal-head"><h3 id="actModalTitle">활동 기록</h3><button class="modal-x" onclick="closeModal('actModal')">&times;</button></div>
+    <div class="modal-body">
+      <form id="actForm">
+        <input type="hidden" id="actFormId">
+        <div class="form-grid">
+          <div class="form-field"><label>거래처 <abbr>*</abbr></label><select id="bf1" required><option value="">선택하세요</option></select></div>
+          <div class="form-field"><label>일자 <abbr>*</abbr></label><input id="bf2" type="date" required></div>
+          <div class="form-field"><label>유형</label><select id="bf3"><option>미팅</option><option>전화</option><option>이메일</option><option>제안서</option><option>계약</option><option>기타</option></select></div>
+          <div class="form-field"><label>담당자</label><input id="bf4"></div>
+          <div class="form-field full"><label>내용 <abbr>*</abbr></label><textarea id="bf5" rows="3" required></textarea></div>
+          <div class="form-field full"><label>결과</label><textarea id="bf6" rows="2"></textarea></div>
+          <div class="form-field full"><label>후속조치</label><textarea id="bf7" rows="2"></textarea></div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('actModal')">취소</button>
+      <button class="btn btn-primary" id="btnSaveAct">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 상세 Drawer ===== -->
+<div class="drawer-overlay" id="drawer">
+  <div class="drawer">
+    <div class="drawer-head"><h3 id="drawerTitle">거래처 상세</h3><button class="modal-x" onclick="closeDrawer()">&times;</button></div>
+    <div class="drawer-body" id="drawerBody"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
