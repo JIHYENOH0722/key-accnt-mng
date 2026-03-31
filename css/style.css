@@ -95,7 +95,7 @@ a{color:inherit;text-decoration:none}
 .sidebar-footer{padding:18px 22px;border-top:1px solid rgba(255,255,255,.06);font-size:.72rem;color:#475569}
 
 /* ── Main Area ── */
-.main{margin-left:270px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.main{margin-left:270px;flex:1;display:flex;flex-direction:column;min-height:100vh;max-width:calc(100vw - 270px);overflow-x:hidden}
 
 .top-header{
   background:rgba(255,255,255,.8);backdrop-filter:blur(12px);
@@ -119,7 +119,7 @@ a{color:inherit;text-decoration:none}
 .header-icon:hover{background:var(--primary-bg);color:var(--primary)}
 
 /* ── Pages ── */
-.page-content{flex:1;padding:28px 32px 48px}
+.page-content{flex:1;padding:28px 32px 48px;overflow-x:hidden;max-width:100%}
 .page{display:none;animation:fadeUp .4s ease}
 .page.active{display:block}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
@@ -564,7 +564,7 @@ table.tbl tr:last-child td{border-bottom:none}
 /* ── Responsive ── */
 @media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(3,1fr)}.chart-grid.tri{grid-template-columns:1fr 1fr}}
 @media(max-width:900px){
-  .sidebar{display:none}.main{margin-left:0}
+  .sidebar{display:none}.main{margin-left:0;max-width:100vw}
   .kpi-grid{grid-template-columns:1fr 1fr}
   .chart-grid,.chart-grid.tri{grid-template-columns:1fr}
   .form-grid{grid-template-columns:1fr}
